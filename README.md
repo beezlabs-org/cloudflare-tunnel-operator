@@ -1,8 +1,8 @@
 # cloudflare-tunnel-operator
-// TODO(user): Add simple overview of use/purpose
+A kubernetes operator for creating Cloudflare tunnels in a cluster
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+This provides an easy way to create tunnels for Cloudflare tunnels inside Kubernetes. This is done by creating custom resources of kind `CloudflareTunnel`.
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
