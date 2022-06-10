@@ -1,0 +1,24 @@
+# permissions for end users to edit cloudflaretunnels.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cloudflaretunnel-editor-role
+rules:
+- apiGroups:
+  - cloudflare-tunnel-operator.beezlabs.app
+  resources:
+  - cloudflaretunnels
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloudflare-tunnel-operator.beezlabs.app
+  resources:
+  - cloudflaretunnels/status
+  verbs:
+  - get
