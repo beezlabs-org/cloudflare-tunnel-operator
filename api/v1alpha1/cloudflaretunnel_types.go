@@ -20,22 +20,23 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // CloudflareTunnelSpec defines the desired state of CloudflareTunnel
 type CloudflareTunnelSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of CloudflareTunnel. Edit cloudflaretunnel_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// +kubebuilder:validation:Format="url"
+	URL                  string `json:"url"`
+	Tunnel               string `json:"tunnel"`
+	CredentialSecretName string `json:"credentialSecretName"`
 }
 
 // CloudflareTunnelStatus defines the observed state of CloudflareTunnel
 type CloudflareTunnelStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +kubebuilder:validation:Format="uuid"
+	ConnectorID  string      `json:"connectorID,omitempty"`
+	Created      metav1.Time `json:"created,omitempty"`
+	Architecture string      `json:"architecture,omitempty"`
+	Version      string      `json:"version,omitempty"`
+	OriginIP     string      `json:"originIP,omitempty"`
+	Edge         string      `json:"edge,omitempty"`
 }
 
 //+kubebuilder:object:root=true
