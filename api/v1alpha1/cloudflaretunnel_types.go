@@ -26,6 +26,7 @@ type CloudflareTunnelSpec struct {
 	URL                  string `json:"url"`
 	Tunnel               string `json:"tunnel"`
 	CredentialSecretName string `json:"credentialSecretName"`
+	Replicas             int32  `json:"replicas"`
 }
 
 // CloudflareTunnelStatus defines the observed state of CloudflareTunnel
