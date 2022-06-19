@@ -19,21 +19,21 @@ package controllers
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 
-	v12 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	"github.com/cloudflare/cloudflare-go"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/cloudflare/cloudflare-go"
-
 	cloudflaretunneloperatorv1alpha1 "github.com/beezlabs-org/cloudflare-tunnel-operator/api/v1alpha1"
+	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/models"
 )
 
 // CloudflareTunnelReconciler reconciles a CloudflareTunnel object
@@ -48,13 +48,14 @@ type CloudflareTunnelReconciler struct {
 
 func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	lfc := log.FromContext(ctx)
-	lfc.Info("Starting Reconciler...")
+	lfc.Info("Reconciling...")
 
 	var cloudflareTunnel cloudflaretunneloperatorv1alpha1.CloudflareTunnel
 	if err := r.Get(ctx, req.NamespacedName, &cloudflareTunnel); err != nil {
 		lfc.Error(err, "could not fetch CloudflareTunnel")
 		return ctrl.Result{}, err
 	}
+	lfc.V(1).Info("Resource fetched")
 
 	// get data from the CRD
 	name := cloudflareTunnel.Name
@@ -70,38 +71,49 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	}
 
-	var secret v1.Secret
+	var secret corev1.Secret
 	// try to get a secret with the given name
 	if err := r.Get(ctx, types.NamespacedName{Name: secretName, Namespace: namespace}, &secret); err != nil {
 		if errors.IsNotFound(err) {
 			// write a log only if the secret was not found and not for other errors
-			lfc.Error(err, "could not find secret with name", secretName)
+			lfc.Error(err, "could not find secret with name "+secretName)
 		}
 		return ctrl.Result{}, err
 	}
+	lfc.V(1).Info("Secret fetched")
 
 	// secret found, decode the token
-	encodedCredentials, ok := secret.Data["credentials"]
+	encodedCredentials, okCred := secret.Data["credentials"]
+	encodedAccountID, okAccount := secret.Data["accountID"]
 
-	if !ok {
+	if !okCred {
 		err := fmt.Errorf("invalid key")
 		lfc.Error(err, "key credentials not found")
 		return ctrl.Result{}, err
 	}
 
-	credentials := string(encodedCredentials)
+	if !okAccount {
+		err := fmt.Errorf("invalid key")
+		lfc.Error(err, "key accountID not found")
+		return ctrl.Result{}, err
+	}
+	lfc.V(1).Info("Secret decoded")
 
-	cf, err := cloudflare.NewWithAPIToken(credentials) // create new instance of cloudflare sdk
+	cf, err := cloudflare.NewWithAPIToken(string(encodedCredentials)) // create new instance of cloudflare sdk
 	if err != nil {
 		lfc.Error(err, "could not create cloudflare instance")
 		return ctrl.Result{}, err
 	}
+	lfc.V(1).Info("Cloudflare instance successfully created")
+
+	cf.AccountID = string(encodedAccountID)
 
 	tunnelSecret, err := generateTunnelSecret() // generate a random secret to be used as the tunnel secret
 	if err != nil {
 		lfc.Error(err, "could not generate tunnel secret")
 		return ctrl.Result{}, err
 	}
+	lfc.V(1).Info("Cloudflare Tunnel secret generated")
 
 	tunnelParams := cloudflare.TunnelCreateParams{
 		AccountID: cf.AccountID, // account is available after the sdk authenticates with the given secret
@@ -125,11 +137,12 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		lfc.Error(err, "could not fetch tunnel list")
 		return ctrl.Result{}, err
 	}
+	lfc.V(1).Info("Existing tunnels fetched")
 
 	var tunnel cloudflare.Tunnel
 
 	if len(tunnels) >= 2 {
-		lfc.Info("Multiple tunnels  exists with same name. Attempting to match ID")
+		lfc.Info("Multiple tunnels exists with same name. Attempting to match ID")
 		existingConnectorID := cloudflareTunnel.Status.ConnectorID
 		// loop through all found tunnels until one is found with a matching ID
 		for _, t := range tunnels {
@@ -159,54 +172,53 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	// this concludes checking the remote tunnel config
+	// now first we create the secret containing the creds to the tunnel
+
+	var secretFetch corev1.Secret
+	secretCreate := models.Secret(name, namespace, tunnelSecret, cloudflareTunnel.Spec.URL)
+	// the secret needs to have an owner reference back to the controller
+	if err := ctrl.SetControllerReference(&cloudflareTunnel, secretCreate, r.Scheme); err != nil {
+		lfc.Error(err, "could not create controller reference in secret")
+		return ctrl.Result{}, err
+	}
+	lfc.V(1).Info("Owner Reference for Secret created")
+
+	// try to get an existing secret with the given name
+	if err := r.Get(ctx, types.NamespacedName{Name: secretCreate.Name, Namespace: namespace}, &secretFetch); err != nil {
+		if errors.IsNotFound(err) {
+			// error due to secret not being present, so, create one
+			lfc.Info("creating secret...")
+			if err := r.Create(ctx, secretCreate); err != nil {
+				lfc.Error(err, "could not create secret")
+				return ctrl.Result{}, err
+			}
+		}
+		return ctrl.Result{}, err
+	} else {
+		// secret exists, so update it to ensure it is consistent
+		if err := r.Update(ctx, secretCreate); err != nil {
+			lfc.Error(err, "could not update secret")
+			return ctrl.Result{}, err
+		}
+	}
+
 	// now we have to check the deployment status and reconcile
 
-	deploymentName := "cf-tunnel-" + name // the deployment name has a prefix
-	var deploymentFetch v12.Deployment
-	deploymentCreate := v12.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      deploymentName,
-			Namespace: namespace,
-			Labels: map[string]string{
-				"app.kubernetes.io/name":       deploymentName,
-				"app.kubernetes.io/component":  "controller",
-				"app.kubernetes.io/created-by": "cloudflare-tunnel-operator",
-			},
-		},
-		Spec: v12.DeploymentSpec{
-			Replicas: &replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"app.kubernetes.io/name": deploymentName,
-				},
-			},
-			Template: v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"app.kubernetes.io/name": deploymentName,
-					},
-				},
-				Spec: v1.PodSpec{
-					Containers: []v1.Container{
-						v1.Container{
-							Name:  "cloudflared",
-							Image: "ghcr.io/maggie0002/cloudflared:latest",
-						},
-					},
-				},
-			},
-		},
-	}
-	if err := ctrl.SetControllerReference(&cloudflareTunnel, &deploymentCreate, r.Scheme); err != nil {
+	var deploymentFetch appsv1.Deployment
+	deploymentCreate := models.Deployment(name, namespace, replicas, tunnel.ID, secretCreate)
+	// the deployment needs to have an owner reference back to the controller
+	if err := ctrl.SetControllerReference(&cloudflareTunnel, deploymentCreate, r.Scheme); err != nil {
 		lfc.Error(err, "could not create controller reference in deployment")
 		return ctrl.Result{}, err
 	}
+	lfc.V(1).Info("Owner Reference for Deployment created")
+
 	// try to get an existing deployment with the given name
-	if err := r.Get(ctx, types.NamespacedName{Name: deploymentName, Namespace: namespace}, &deploymentFetch); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Name: deploymentCreate.Name, Namespace: namespace}, &deploymentFetch); err != nil {
 		if errors.IsNotFound(err) {
 			// error due to deployment not being present, so, create one
 			lfc.Info("creating deployment...")
-			if err := r.Create(ctx, &deploymentCreate); err != nil {
+			if err := r.Create(ctx, deploymentCreate); err != nil {
 				lfc.Error(err, "could not create deployment")
 				return ctrl.Result{}, err
 			}
@@ -214,7 +226,7 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, err
 	} else {
 		// deployment exists, so update it to ensure it is consistent
-		if err := r.Update(ctx, &deploymentCreate); err != nil {
+		if err := r.Update(ctx, deploymentCreate); err != nil {
 			lfc.Error(err, "could not update deployment")
 			return ctrl.Result{}, err
 		}
@@ -227,11 +239,12 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 func (r *CloudflareTunnelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudflaretunneloperatorv1alpha1.CloudflareTunnel{}).
+		//Owns(&appsv1.Deployment{}).
 		Complete(r)
 }
 
 func generateTunnelSecret() (string, error) {
 	randomBytes := make([]byte, 32)
 	_, err := rand.Read(randomBytes)
-	return string(randomBytes), err
+	return base64.StdEncoding.EncodeToString(randomBytes), err
 }

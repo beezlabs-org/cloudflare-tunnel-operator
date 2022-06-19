@@ -37,6 +37,9 @@ spec:
             properties:
               credentialSecretName:
                 type: string
+              replicas:
+                format: int32
+                type: integer
               tunnel:
                 type: string
               url:
@@ -44,6 +47,7 @@ spec:
                 type: string
             required:
             - credentialSecretName
+            - replicas
             - tunnel
             - url
             type: object

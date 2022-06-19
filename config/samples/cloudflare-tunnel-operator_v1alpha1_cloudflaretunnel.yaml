@@ -3,4 +3,7 @@ kind: CloudflareTunnel
 metadata:
   name: cloudflaretunnel-sample
 spec:
-  # TODO(user): Add fields here
+  url: test.example.com
+  tunnel: testtunnel
+  credentialSecretName: cloudflaretunnel-sample
+  replicas: 1
