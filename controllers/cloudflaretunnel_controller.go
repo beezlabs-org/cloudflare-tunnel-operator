@@ -213,8 +213,36 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	// now we have to check the deployment status and reconcile
 
+	// first get the url for the targeted service
+	var targetService corev1.Service
+	if err := r.Get(ctx, types.NamespacedName{Name: cloudflareTunnel.Spec.Service, Namespace: namespace}, &targetService); err != nil {
+		if errors.IsNotFound(err) {
+			// error due to service not being present
+			lfc.Error(err, "target service not present")
+		}
+		return ctrl.Result{}, err
+	} else {
+		// service exists, check if port is open
+		var port corev1.ServicePort
+		for _, servicePort := range targetService.Spec.Ports {
+			if servicePort.Port == cloudflareTunnel.Spec.Port {
+				lfc.V(1).Info("Ports matched")
+				port = servicePort
+				break
+			}
+		}
+		if &port == nil {
+			lfc.Error(err, "port doesn't exist in service")
+			return ctrl.Result{}, err
+		}
+	}
+
+	// generate the URL of the form `service-name.namespace:port`
+	// see https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records
+	url := cloudflareTunnel.Spec.Service + "." + namespace + ":" + string(cloudflareTunnel.Spec.Port)
+
 	var deploymentFetch appsv1.Deployment
-	deploymentCreate := models.Deployment(name, namespace, replicas, tunnel.ID, secretCreate, cloudflareTunnel.Spec.URL)
+	deploymentCreate := models.Deployment(name, namespace, replicas, tunnel.ID, secretCreate, url)
 	// the deployment needs to have an owner reference back to the controller
 	if err := ctrl.SetControllerReference(&cloudflareTunnel, deploymentCreate, r.Scheme); err != nil {
 		lfc.Error(err, "could not create controller reference in deployment")

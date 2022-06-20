@@ -23,7 +23,9 @@ import (
 // CloudflareTunnelSpec defines the desired state of CloudflareTunnel
 type CloudflareTunnelSpec struct {
 	// +kubebuilder:validation:Format="url"
-	URL                  string `json:"url"`
+	Domain               string `json:"domain"`
+	Service              string `json:"service"`
+	Port                 int32  `json:"port"`
 	Tunnel               string `json:"tunnel"`
 	CredentialSecretName string `json:"credentialSecretName"`
 	Replicas             int32  `json:"replicas"`

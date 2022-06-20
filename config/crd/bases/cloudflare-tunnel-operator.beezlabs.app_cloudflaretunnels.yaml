@@ -37,19 +37,22 @@ spec:
             properties:
               credentialSecretName:
                 type: string
+              domain:
+                format: url
+                type: string
               replicas:
                 format: int32
                 type: integer
-              tunnel:
+              service:
                 type: string
-              url:
-                format: url
+              tunnel:
                 type: string
             required:
             - credentialSecretName
+            - domain
             - replicas
+            - service
             - tunnel
-            - url
             type: object
           status:
             description: CloudflareTunnelStatus defines the observed state of CloudflareTunnel
