@@ -40,6 +40,9 @@ spec:
               domain:
                 format: url
                 type: string
+              port:
+                format: int32
+                type: integer
               replicas:
                 format: int32
                 type: integer
@@ -47,12 +50,16 @@ spec:
                 type: string
               tunnel:
                 type: string
+              zone:
+                type: string
             required:
             - credentialSecretName
             - domain
+            - port
             - replicas
             - service
             - tunnel
+            - zone
             type: object
           status:
             description: CloudflareTunnelStatus defines the observed state of CloudflareTunnel

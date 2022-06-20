@@ -24,6 +24,7 @@ import (
 type CloudflareTunnelSpec struct {
 	// +kubebuilder:validation:Format="url"
 	Domain               string `json:"domain"`
+	Zone                 string `json:"zone"`
 	Service              string `json:"service"`
 	Port                 int32  `json:"port"`
 	Tunnel               string `json:"tunnel"`

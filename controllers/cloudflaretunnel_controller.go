@@ -21,7 +21,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-
 	"github.com/cloudflare/cloudflare-go"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -269,6 +268,35 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
+	// finally we need to check if a CNAME exists for the given domain and create if not
+	zoneID, err := cf.ZoneIDByName(cloudflareTunnel.Spec.Zone)
+	if err != nil {
+		lfc.Error(err, "could not fetch zone id")
+		return ctrl.Result{}, err
+	}
+	dnsrecords, err := cf.DNSRecords(ctx, zoneID, cloudflare.DNSRecord{
+		Type: "CNAME",
+		Name: cloudflareTunnel.Spec.Domain,
+	})
+	if err != nil {
+		lfc.Error(err, "could not fetch dns list")
+		return ctrl.Result{}, err
+	}
+	if len(dnsrecords) != 0 {
+		lfc.V(1).Info("DNS record exists")
+	} else {
+		lfc.V(1).Info("DNS record doesn't exist, creating")
+		_, err = cf.CreateDNSRecord(ctx, zoneID, cloudflare.DNSRecord{
+			Type:    "CNAME",
+			Name:    cloudflareTunnel.Spec.Domain,
+			Content: tunnel.ID + "cfargotunnel.com",
+			TTL:     0,
+		})
+		if err != nil {
+			lfc.Error(err, "could not fetch tunnel token")
+			return ctrl.Result{}, err
+		}
+	}
 	return ctrl.Result{}, nil
 }
 
