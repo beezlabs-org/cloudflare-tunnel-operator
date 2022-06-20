@@ -108,19 +108,6 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 	cf.AccountID = string(encodedAccountID)
 
-	tunnelSecret, err := generateTunnelSecret() // generate a random secret to be used as the tunnel secret
-	if err != nil {
-		lfc.Error(err, "could not generate tunnel secret")
-		return ctrl.Result{}, err
-	}
-	lfc.V(1).Info("Cloudflare Tunnel secret generated")
-
-	tunnelParams := cloudflare.TunnelCreateParams{
-		AccountID: cf.AccountID, // account is available after the sdk authenticates with the given secret
-		Name:      name,         // name of the tunnel is the same as the name of the CRD
-		Secret:    tunnelSecret, // use the randomly generated secret
-	}
-
 	falsePointer := false // needed as the function below only accepts a *bool
 
 	// first, we are checking if tunnels with the given name exists in the remote or not
@@ -164,6 +151,19 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		tunnel = tunnels[0]
 	} else {
 		lfc.Info("Tunnel doesn't exist. Creating...")
+		tunnelSecret, err := generateTunnelSecret() // generate a random secret to be used as the tunnel secret
+		if err != nil {
+			lfc.Error(err, "could not generate tunnel secret")
+			return ctrl.Result{}, err
+		}
+		lfc.V(1).Info("Cloudflare Tunnel secret generated")
+
+		tunnelParams := cloudflare.TunnelCreateParams{
+			AccountID: cf.AccountID, // account is available after the sdk authenticates with the given secret
+			Name:      name,         // name of the tunnel is the same as the name of the CRD
+			Secret:    tunnelSecret, // use the randomly generated secret
+		}
+
 		tunnel, err = cf.CreateTunnel(ctx, tunnelParams)
 		if err != nil {
 			lfc.Error(err, "could not create the tunnel")
@@ -171,11 +171,20 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		}
 	}
 
+	tunnelToken, err := cf.TunnelToken(ctx, cloudflare.TunnelTokenParams{
+		AccountID: cf.AccountID,
+		ID:        tunnel.ID,
+	})
+	if err != nil {
+		lfc.Error(err, "could not fetch tunnel token")
+		return ctrl.Result{}, err
+	}
+
 	// this concludes checking the remote tunnel config
 	// now first we create the secret containing the creds to the tunnel
 
 	var secretFetch corev1.Secret
-	secretCreate := models.Secret(name, namespace, tunnelSecret, cloudflareTunnel.Spec.URL)
+	secretCreate := models.Secret(name, namespace, tunnelToken)
 	// the secret needs to have an owner reference back to the controller
 	if err := ctrl.SetControllerReference(&cloudflareTunnel, secretCreate, r.Scheme); err != nil {
 		lfc.Error(err, "could not create controller reference in secret")
@@ -205,7 +214,7 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	// now we have to check the deployment status and reconcile
 
 	var deploymentFetch appsv1.Deployment
-	deploymentCreate := models.Deployment(name, namespace, replicas, tunnel.ID, secretCreate)
+	deploymentCreate := models.Deployment(name, namespace, replicas, tunnel.ID, secretCreate, cloudflareTunnel.Spec.URL)
 	// the deployment needs to have an owner reference back to the controller
 	if err := ctrl.SetControllerReference(&cloudflareTunnel, deploymentCreate, r.Scheme); err != nil {
 		lfc.Error(err, "could not create controller reference in deployment")

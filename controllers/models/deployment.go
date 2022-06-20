@@ -8,7 +8,7 @@ import (
 	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/constants"
 )
 
-func Deployment(name string, namespace string, replicas int32, id string, secret *corev1.Secret) *appsv1.Deployment {
+func Deployment(name string, namespace string, replicas int32, id string, secret *corev1.Secret, tunnelURL string) *appsv1.Deployment {
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name + "-" + constants.ResourceSuffix,
@@ -39,6 +39,12 @@ func Deployment(name string, namespace string, replicas int32, id string, secret
 							Image:   "ghcr.io/maggie0002/cloudflared:latest",
 							Command: []string{"./cloudflared"},
 							Args:    []string{"tunnel", "run", id},
+							Env: []corev1.EnvVar{
+								corev1.EnvVar{
+									Name:  "TUNNEL_URL",
+									Value: tunnelURL,
+								},
+							},
 							EnvFrom: []corev1.EnvFromSource{
 								corev1.EnvFromSource{
 									SecretRef: &corev1.SecretEnvSource{

@@ -7,7 +7,7 @@ import (
 	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/constants"
 )
 
-func Secret(name string, namespace string, tunnelSecret string, tunnelURL string) *corev1.Secret {
+func Secret(name string, namespace string, tunnelSecret string) *corev1.Secret {
 	return &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name + "-" + constants.ResourceSuffix,
@@ -20,7 +20,6 @@ func Secret(name string, namespace string, tunnelSecret string, tunnelURL string
 		},
 		StringData: map[string]string{
 			"TUNNEL_TOKEN": tunnelSecret,
-			"TUNNEL_URL":   tunnelURL,
 		},
 		Type: corev1.SecretTypeOpaque,
 	}
