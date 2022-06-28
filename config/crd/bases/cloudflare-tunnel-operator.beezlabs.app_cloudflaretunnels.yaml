@@ -35,29 +35,32 @@ spec:
           spec:
             description: CloudflareTunnelSpec defines the desired state of CloudflareTunnel
             properties:
-              credentialSecretName:
-                type: string
               domain:
                 format: url
                 type: string
               port:
                 format: int32
                 type: integer
+              protocol:
+                type: string
               replicas:
                 format: int32
                 type: integer
               service:
+                type: string
+              tokenSecretName:
                 type: string
               tunnel:
                 type: string
               zone:
                 type: string
             required:
-            - credentialSecretName
             - domain
             - port
+            - protocol
             - replicas
             - service
+            - tokenSecretName
             - tunnel
             - zone
             type: object
@@ -67,7 +70,6 @@ spec:
               architecture:
                 type: string
               connectorID:
-                format: uuid
                 type: string
               created:
                 format: date-time
@@ -75,6 +77,9 @@ spec:
               edge:
                 type: string
               originIP:
+                type: string
+              tunnelID:
+                format: uuid
                 type: string
               version:
                 type: string

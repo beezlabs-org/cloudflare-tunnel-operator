@@ -23,18 +23,20 @@ import (
 // CloudflareTunnelSpec defines the desired state of CloudflareTunnel
 type CloudflareTunnelSpec struct {
 	// +kubebuilder:validation:Format="url"
-	Domain               string `json:"domain"`
-	Zone                 string `json:"zone"`
-	Service              string `json:"service"`
-	Port                 int32  `json:"port"`
-	Tunnel               string `json:"tunnel"`
-	CredentialSecretName string `json:"credentialSecretName"`
-	Replicas             int32  `json:"replicas"`
+	Domain          string `json:"domain"`
+	Zone            string `json:"zone"`
+	Protocol        string `json:"protocol"`
+	Service         string `json:"service"`
+	Port            int32  `json:"port"`
+	Tunnel          string `json:"tunnel"`
+	TokenSecretName string `json:"tokenSecretName"`
+	Replicas        int32  `json:"replicas"`
 }
 
 // CloudflareTunnelStatus defines the observed state of CloudflareTunnel
 type CloudflareTunnelStatus struct {
 	// +kubebuilder:validation:Format="uuid"
+	TunnelID     string      `json:"tunnelID,omitempty"`
 	ConnectorID  string      `json:"connectorID,omitempty"`
 	Created      metav1.Time `json:"created,omitempty"`
 	Architecture string      `json:"architecture,omitempty"`
