@@ -404,7 +404,7 @@ func (r *CloudflareTunnelReconciler) createDeployment(ctx context.Context, cloud
 func (r *CloudflareTunnelReconciler) getTargetURL(ctx context.Context) (string, error) {
 	// first get the url for the targeted service
 	var targetService corev1.Service
-	if err := r.Get(ctx, types.NamespacedName{Name: r.Service, Namespace: r.Namespace}, &targetService); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Name: r.Service.Name, Namespace: r.Service.Namespace}, &targetService); err != nil {
 		if errors.IsNotFound(err) {
 			// error due to service not being present
 			r.logger.Error(err, "target service not present")
@@ -414,7 +414,7 @@ func (r *CloudflareTunnelReconciler) getTargetURL(ctx context.Context) (string, 
 		// service exists, check if port is open
 		var port corev1.ServicePort
 		for _, servicePort := range targetService.Spec.Ports {
-			if servicePort.Port == r.Port {
+			if servicePort.Port == r.Service.Port {
 				r.logger.V(1).Info("Ports matched")
 				port = servicePort
 				break
@@ -428,11 +428,11 @@ func (r *CloudflareTunnelReconciler) getTargetURL(ctx context.Context) (string, 
 
 	// if the service is a LoadBalancer then use the ingress IP as the host
 	if targetService.Spec.Type == corev1.ServiceTypeLoadBalancer {
-		return r.Protocol + "://" + targetService.Status.LoadBalancer.Ingress[0].IP + ":" + string(r.Port), nil
+		return r.Service.Protocol + "://" + targetService.Status.LoadBalancer.Ingress[0].IP + ":" + string(r.Service.Port), nil
 	}
 	// else generate the URL of the form `service-name.namespace:port`
 	// see https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records
-	return r.Protocol + "://" + r.Service + "." + r.Namespace + ":" + string(r.Port), nil
+	return r.Service.Protocol + "://" + r.Service.Name + "." + r.Service.Namespace + ":" + string(r.Service.Port), nil
 }
 
 func generateTunnelSecret() (string, error) {

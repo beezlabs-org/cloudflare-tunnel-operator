@@ -1,9 +1,14 @@
 apiVersion: cloudflare-tunnel-operator.beezlabs.app/v1alpha1
 kind: CloudflareTunnel
 metadata:
-  name: cloudflaretunnel-sample
+  name: sample-tunnel
 spec:
-  url: test.example.com
-  tunnel: testtunnel
-  credentialSecretName: cloudflaretunnel-sample
+  domain: test.example.com
+  zone: example.com
+  service:
+    name: traefik
+    namespace: traefik
+    protocol: https
+    port: 443
+  tokenSecretName: sample-tunnel
   replicas: 1

@@ -23,14 +23,18 @@ import (
 // CloudflareTunnelSpec defines the desired state of CloudflareTunnel
 type CloudflareTunnelSpec struct {
 	// +kubebuilder:validation:Format="url"
-	Domain          string `json:"domain"`
-	Zone            string `json:"zone"`
-	Protocol        string `json:"protocol"`
-	Service         string `json:"service"`
-	Port            int32  `json:"port"`
-	Tunnel          string `json:"tunnel"`
-	TokenSecretName string `json:"tokenSecretName"`
-	Replicas        int32  `json:"replicas"`
+	Domain          string                  `json:"domain"`
+	Zone            string                  `json:"zone"`
+	Service         CloudflareTunnelService `json:"service"`
+	TokenSecretName string                  `json:"tokenSecretName"`
+	Replicas        int32                   `json:"replicas"`
+}
+
+type CloudflareTunnelService struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+	Protocol  string `json:"protocol"`
+	Port      int32  `json:"port"`
 }
 
 // CloudflareTunnelStatus defines the observed state of CloudflareTunnel
