@@ -12,6 +12,7 @@ type DeploymentModel struct {
 	Name      string
 	Namespace string
 	Replicas  int32
+	TunnelID  string
 	Secret    *corev1.Secret
 	ConfigMap *corev1.ConfigMap
 }
@@ -46,11 +47,41 @@ func (d *DeploymentModel) GetDeployment() *appsv1.Deployment {
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
-						corev1.Container{
+						{
 							Name:    "cloudflared",
-							Image:   "ghcr.io/maggie0002/cloudflared:latest",
-							Command: []string{"./cloudflared"},
+							Image:   "ghcr.io/sayakmukhopadhyay/cloudflared:latest",
+							Command: []string{"cloudflared"},
 							Args:    []string{"tunnel", "run"},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "cloudflared-config",
+									MountPath: "/root/.cloudflared/config.yaml",
+									SubPath:   "config.yaml",
+								},
+								{
+									Name:      "cloudflared-creds",
+									MountPath: "/root/.cloudflared/" + d.TunnelID + ".json",
+									SubPath:   d.TunnelID + ".json",
+								},
+							},
+						},
+					},
+					Volumes: []corev1.Volume{
+						{
+							Name: "cloudflared-config",
+							VolumeSource: corev1.VolumeSource{
+								ConfigMap: &corev1.ConfigMapVolumeSource{
+									LocalObjectReference: corev1.LocalObjectReference{Name: d.Name + "-" + constants.ResourceSuffix},
+								},
+							},
+						},
+						{
+							Name: "cloudflared-creds",
+							VolumeSource: corev1.VolumeSource{
+								Secret: &corev1.SecretVolumeSource{
+									SecretName: d.Name + "-" + constants.ResourceSuffix,
+								},
+							},
 						},
 					},
 				},

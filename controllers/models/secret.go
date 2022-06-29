@@ -29,7 +29,7 @@ func (s *SecretModel) GetSecret() *corev1.Secret {
 			},
 		},
 		StringData: map[string]string{
-			s.TunnelID: s.TunnelSecret,
+			s.TunnelID + ".json": s.TunnelSecret,
 		},
 		Type: corev1.SecretTypeOpaque,
 	}

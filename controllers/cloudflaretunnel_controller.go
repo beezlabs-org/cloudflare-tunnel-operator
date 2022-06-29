@@ -21,6 +21,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"strconv"
+
 	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/constants"
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/go-logr/logr"
@@ -234,8 +236,8 @@ func (r *CloudflareTunnelReconciler) createTunnelRemote(ctx context.Context) err
 			r.logger.Error(err, "could not create the tunnel")
 			return err
 		}
-		r.TunnelID = tunnel.ID // assign the tunnelID from the created tunnel
 	}
+	r.TunnelID = tunnel.ID // assign the tunnelID from the created tunnel
 
 	tunnelToken, err := cf.TunnelToken(ctx, cloudflare.TunnelTokenParams{
 		AccountID: cf.AccountID,
@@ -245,7 +247,12 @@ func (r *CloudflareTunnelReconciler) createTunnelRemote(ctx context.Context) err
 		r.logger.Error(err, "could not fetch tunnel token")
 		return err
 	}
-	r.TunnelSecret = tunnelToken
+	tunnelTokenDecodedBytes, err := base64.StdEncoding.DecodeString(tunnelToken)
+	if err != nil {
+		r.logger.Error(err, "could not decode tunnel token")
+		return err
+	}
+	r.TunnelSecret = string(tunnelTokenDecodedBytes)
 	return nil
 }
 
@@ -342,7 +349,7 @@ func (r *CloudflareTunnelReconciler) createConfigMap(ctx context.Context, cloudf
 	r.logger.V(1).Info("Owner Reference for ConfigMap created")
 
 	// try to get an existing secret with the given name
-	if err := r.Get(ctx, types.NamespacedName{Name: r.Name, Namespace: r.Namespace}, &configMapFetch); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Name: configMapCreate.Name, Namespace: r.Namespace}, &configMapFetch); err != nil {
 		if errors.IsNotFound(err) {
 			// error due to secret not being present, so, create one
 			r.logger.Info("creating ConfigMap...")
@@ -369,6 +376,7 @@ func (r *CloudflareTunnelReconciler) createDeployment(ctx context.Context, cloud
 		Name:      r.Name,
 		Namespace: r.Namespace,
 		Replicas:  r.Replicas,
+		TunnelID:  r.TunnelID,
 		Secret:    secret,
 		ConfigMap: configMap,
 	}).GetDeployment()
@@ -381,7 +389,7 @@ func (r *CloudflareTunnelReconciler) createDeployment(ctx context.Context, cloud
 	r.logger.V(1).Info("Owner Reference for deployment created")
 
 	// try to get an existing deployment with the given name
-	if err := r.Get(ctx, types.NamespacedName{Name: r.Name, Namespace: r.Namespace}, &deploymentFetch); err != nil {
+	if err := r.Get(ctx, types.NamespacedName{Name: deploymentCreate.Name, Namespace: r.Namespace}, &deploymentFetch); err != nil {
 		if errors.IsNotFound(err) {
 			// error due to secret not being present, so, create one
 			r.logger.Info("creating deployment...")
@@ -428,11 +436,11 @@ func (r *CloudflareTunnelReconciler) getTargetURL(ctx context.Context) (string, 
 
 	// if the service is a LoadBalancer then use the ingress IP as the host
 	if targetService.Spec.Type == corev1.ServiceTypeLoadBalancer {
-		return r.Service.Protocol + "://" + targetService.Status.LoadBalancer.Ingress[0].IP + ":" + string(r.Service.Port), nil
+		return r.Service.Protocol + "://" + targetService.Status.LoadBalancer.Ingress[0].IP + ":" + strconv.Itoa(int(r.Service.Port)), nil
 	}
 	// else generate the URL of the form `service-name.namespace:port`
 	// see https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records
-	return r.Service.Protocol + "://" + r.Service.Name + "." + r.Service.Namespace + ":" + string(r.Service.Port), nil
+	return r.Service.Protocol + "://" + r.Service.Name + "." + r.Service.Namespace + ":" + strconv.Itoa(int(r.Service.Port)), nil
 }
 
 func generateTunnelSecret() (string, error) {

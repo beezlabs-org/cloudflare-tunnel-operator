@@ -3,8 +3,8 @@ kind: CloudflareTunnel
 metadata:
   name: sample-tunnel
 spec:
-  domain: test.example.com
-  zone: example.com
+  domain: example.sayakm.me
+  zone: sayakm.me
   service:
     name: traefik
     namespace: traefik

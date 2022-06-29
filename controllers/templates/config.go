@@ -2,7 +2,7 @@ package templates
 
 const CONFIG = `
 tunnel: {{ .TunnelID }}
-credentials-file: /home/{{ .TunnelID }}.json
+credentials-file: /root/.cloudflared/{{ .TunnelID }}.json
 warp-routing:
   enabled: true
 ingress:
