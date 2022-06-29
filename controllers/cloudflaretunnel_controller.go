@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/constants"
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -36,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	cfv1 "github.com/beezlabs-org/cloudflare-tunnel-operator/api/v1alpha1"
+	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/constants"
 	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/models"
 )
 
@@ -270,18 +270,30 @@ func (r *CloudflareTunnelReconciler) createDNSCNAME(ctx context.Context) error {
 		r.logger.Error(err, "could not fetch dns list")
 		return err
 	}
-	if len(dnsRecords) != 0 {
-		r.logger.V(1).Info("DNS record exists")
+	truePointer := true // needed as the struct below only accepts a *bool
+	dnsRecord := cloudflare.DNSRecord{
+		Type:    "CNAME",
+		Name:    r.Domain,
+		Content: r.TunnelID + constants.CNAMESuffix,
+		TTL:     0,
+		Proxied: &truePointer,
+	}
+	if len(dnsRecords) >= 2 {
+		err := fmt.Errorf("multiple DNS records exist")
+		r.logger.Error(err, "2 or more DNS CNAME records already exists for the given name. Unable to choose between one of them")
+		return err
+	}
+	if len(dnsRecords) == 1 {
+		r.logger.V(1).Info("DNS record exists, updating")
+		if err := r.UpdateDNSRecord(ctx, zoneID, dnsRecords[0].ID, dnsRecord); err != nil {
+			r.logger.Error(err, "could not update DNS record")
+			return err
+		}
 	} else {
 		r.logger.V(1).Info("DNS record doesn't exist, creating")
-		_, err = r.CreateDNSRecord(ctx, zoneID, cloudflare.DNSRecord{
-			Type:    "CNAME",
-			Name:    r.Domain,
-			Content: r.TunnelID + constants.CNAMESuffix,
-			TTL:     0,
-		})
+		_, err = r.CreateDNSRecord(ctx, zoneID, dnsRecord)
 		if err != nil {
-			r.logger.Error(err, "could not fetch tunnel token")
+			r.logger.Error(err, "could not create DNS record")
 			return err
 		}
 	}
@@ -292,12 +304,15 @@ func (r *CloudflareTunnelReconciler) createSecret(ctx context.Context, cloudflar
 	// now first we create the secret containing the creds to the tunnel
 	// this is fully contained in the fetched tunnel secret including the tunnel id and account tag
 	var secretFetch corev1.Secret
-	secretCreate := models.Secret(models.SecretModel{
-		Name:         r.Name,
-		Namespace:    r.Namespace,
-		TunnelSecret: r.TunnelSecret,
-		TunnelID:     r.TunnelID,
+	secretCreate, err := models.Secret(models.SecretModel{
+		Name:        r.Name,
+		Namespace:   r.Namespace,
+		TunnelToken: r.TunnelSecret,
+		TunnelID:    r.TunnelID,
 	}).GetSecret()
+	if err != nil {
+		return nil, err
+	}
 
 	// the secret needs to have an owner reference back to the controller
 	if err := ctrl.SetControllerReference(&cloudflareTunnel, secretCreate, r.Scheme); err != nil {

@@ -2,12 +2,13 @@ package models
 
 import (
 	"bytes"
-	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/templates"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"text/template"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/constants"
+	"github.com/beezlabs-org/cloudflare-tunnel-operator/controllers/templates"
 )
 
 type ConfigMapModel struct {
