@@ -40,7 +40,11 @@ type CloudflareTunnelService struct {
 // CloudflareTunnelStatus defines the observed state of CloudflareTunnel
 type CloudflareTunnelStatus struct {
 	// +kubebuilder:validation:Format="uuid"
-	TunnelID     string      `json:"tunnelID,omitempty"`
+	TunnelID    string                        `json:"tunnelID,omitempty"`
+	Connections []CloudflareTunnelConnections `json:"connections"`
+}
+
+type CloudflareTunnelConnections struct {
 	ConnectorID  string      `json:"connectorID,omitempty"`
 	Created      metav1.Time `json:"created,omitempty"`
 	Architecture string      `json:"architecture,omitempty"`

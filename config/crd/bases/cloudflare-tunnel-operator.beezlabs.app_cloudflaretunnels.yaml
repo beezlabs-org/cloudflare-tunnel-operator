@@ -72,22 +72,29 @@ spec:
           status:
             description: CloudflareTunnelStatus defines the observed state of CloudflareTunnel
             properties:
-              architecture:
-                type: string
-              connectorID:
-                type: string
-              created:
-                format: date-time
-                type: string
-              edge:
-                type: string
-              originIP:
-                type: string
+              connections:
+                items:
+                  properties:
+                    architecture:
+                      type: string
+                    connectorID:
+                      type: string
+                    created:
+                      format: date-time
+                      type: string
+                    edge:
+                      type: string
+                    originIP:
+                      type: string
+                    version:
+                      type: string
+                  type: object
+                type: array
               tunnelID:
                 format: uuid
                 type: string
-              version:
-                type: string
+            required:
+            - connections
             type: object
         type: object
     served: true

@@ -22,12 +22,14 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/cloudflare/cloudflare-go"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -116,7 +118,15 @@ func (r *CloudflareTunnelReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	if err = r.createDNSCNAME(ctx); err != nil {
 		return ctrl.Result{}, err
 	}
-	return ctrl.Result{}, nil
+
+	// update the status of the custom resource
+	if err := r.updateStatus(ctx, &cloudflareTunnel); err != nil {
+		return ctrl.Result{}, err
+	}
+	if err := r.Status().Update(ctx, &cloudflareTunnel); err != nil {
+		return ctrl.Result{}, err
+	}
+	return ctrl.Result{RequeueAfter: time.Minute * 5}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -456,6 +466,36 @@ func (r *CloudflareTunnelReconciler) getTargetURL(ctx context.Context) (string, 
 	// else generate the URL of the form `service-name.namespace:port`
 	// see https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/#a-aaaa-records
 	return r.Service.Protocol + "://" + r.Service.Name + "." + r.Service.Namespace + ":" + strconv.Itoa(int(r.Service.Port)), nil
+}
+
+func (r *CloudflareTunnelReconciler) updateStatus(ctx context.Context, cloudflareTunnel *cfv1.CloudflareTunnel) error {
+	tunnelConnectionParams := cloudflare.TunnelConnectionParams{
+		AccountID: r.AccountID,
+		ID:        r.TunnelID,
+	}
+	tunnelConnections, err := r.TunnelConnections(ctx, tunnelConnectionParams)
+	if err != nil {
+		r.logger.Error(err, "could not fetch tunnel connections")
+		return err
+	}
+	var connections []cfv1.CloudflareTunnelConnections
+	for _, connectionMeta := range tunnelConnections { // 0 index since it will always return a single tunnel
+		for _, connection := range connectionMeta.Connections {
+			connections = append(connections, cfv1.CloudflareTunnelConnections{
+				ConnectorID:  connectionMeta.ID,
+				Created:      metav1.Time{Time: *connectionMeta.RunAt},
+				Architecture: connectionMeta.Arch,
+				Version:      connectionMeta.Version,
+				OriginIP:     connection.OriginIP,
+				Edge:         connection.ColoName,
+			})
+		}
+	}
+	cloudflareTunnel.Status = cfv1.CloudflareTunnelStatus{
+		TunnelID:    r.TunnelID,
+		Connections: connections,
+	}
+	return nil
 }
 
 func generateTunnelSecret() (string, error) {
