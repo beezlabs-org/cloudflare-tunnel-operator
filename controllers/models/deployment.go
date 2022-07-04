@@ -51,7 +51,14 @@ func (d *DeploymentModel) GetDeployment() *appsv1.Deployment {
 							Name:    "cloudflared",
 							Image:   "ghcr.io/sayakmukhopadhyay/cloudflared:latest",
 							Command: []string{"cloudflared"},
-							Args:    []string{"tunnel", "run"},
+							Args:    []string{"tunnel", "--metrics", "localhost:9090", "run"},
+							Ports: []corev1.ContainerPort{
+								{
+									Name:          "metrics",
+									ContainerPort: 9090,
+									Protocol:      corev1.ProtocolTCP,
+								},
+							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "cloudflared-config",
