@@ -35,6 +35,27 @@ spec:
           spec:
             description: CloudflareTunnelSpec defines the desired state of CloudflareTunnel
             properties:
+              container:
+                properties:
+                  args:
+                    items:
+                      type: string
+                    type: array
+                  command:
+                    items:
+                      type: string
+                    type: array
+                  image:
+                    type: string
+                  imagePullPolicy:
+                    description: PullPolicy describes a policy for if/when to pull
+                      a container image
+                    enum:
+                    - IfNotPresent
+                    - Always
+                    - Never
+                    type: string
+                type: object
               domain:
                 format: url
                 type: string
@@ -51,6 +72,9 @@ spec:
                     format: int32
                     type: integer
                   protocol:
+                    enum:
+                    - http
+                    - https
                     type: string
                 required:
                 - name

@@ -17,24 +17,40 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // CloudflareTunnelSpec defines the desired state of CloudflareTunnel
 type CloudflareTunnelSpec struct {
 	// +kubebuilder:validation:Format="url"
-	Domain          string                  `json:"domain"`
-	Zone            string                  `json:"zone"`
-	Service         CloudflareTunnelService `json:"service"`
-	TokenSecretName string                  `json:"tokenSecretName"`
-	Replicas        int32                   `json:"replicas"`
+	Domain  string                   `json:"domain"`
+	Zone    string                   `json:"zone"`
+	Service *CloudflareTunnelService `json:"service"`
+	// +kubebuilder:validation:Optional
+	Container       *CloudflareTunnelContainer `json:"container"`
+	TokenSecretName string                     `json:"tokenSecretName"`
+	Replicas        int32                      `json:"replicas"`
 }
 
 type CloudflareTunnelService struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
-	Protocol  string `json:"protocol"`
-	Port      int32  `json:"port"`
+	// +kubebuilder:validation:Enum=http;https
+	Protocol string `json:"protocol"`
+	Port     int32  `json:"port"`
+}
+
+type CloudflareTunnelContainer struct {
+	// +kubebuilder:validation:Optional
+	Image string `json:"image"`
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Enum=IfNotPresent;Always;Never
+	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy"`
+	// +kubebuilder:validation:Optional
+	Command []string `json:"command"`
+	// +kubebuilder:validation:Optional
+	Args []string `json:"args"`
 }
 
 // CloudflareTunnelStatus defines the observed state of CloudflareTunnel
