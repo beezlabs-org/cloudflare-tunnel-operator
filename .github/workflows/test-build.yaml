@@ -1,0 +1,64 @@
+name: Test and Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: Check if protected files have been edited
+        if: ${{ github.event_name == 'pull_request' }}
+        uses:  beezlabs-org/prevent-file-change@v1
+        with:
+          pattern: '^\.github\/.*|^VERSION$'
+
+  build:
+    needs:
+      - check-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout and Install Dependencies
+        uses: beezlabs-org/go-chkout-dep@v1
+        with:
+          go: '1.17'
+
+      - name: Build Production
+        run: |
+          go build -o ./bin ./main.go
+
+  docker-build-push:
+    if: ${{ github.event_name == 'push' }}
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v2
+        with:
+          pull: true
+          push: true
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          tags: ghcr.io/beezlabs-org/${{ github.event.repository.name }}:build-${{ github.sha }}

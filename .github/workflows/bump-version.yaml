@@ -1,0 +1,16 @@
+name: Bump Version
+on:
+  workflow_dispatch:
+    inputs:
+      new-version:
+        description: The new version to bump to
+        required: true
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Version Bump
+        uses: beezlabs-org/go-bump-version@v1
+        with:
+          pat: ${{ secrets.REPO_PAT }}
+          new-version: ${{ github.event.inputs.new-version }}
