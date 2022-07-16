@@ -1,94 +1,93 @@
-# cloudflare-tunnel-operator
-A kubernetes operator for creating Cloudflare tunnels in a cluster
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![License][license-shield]][license-url]
+<br />
 
-## Description
-This provides an easy way to create tunnels for Cloudflare tunnels inside Kubernetes. This is done by creating custom resources of kind `CloudflareTunnel`.
+<h1 align="center">Cloudflare Tunnel Operator</h1>
 
-## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
-**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+<p align="center">
+  Kubernetes operator to run Cloudflare Tunnels
+  <br />
+  <a href="https://github.com/beezlabs-org/cloudflare-tunnel-operator"><strong>Explore the docs »</strong></a>
+  <br />
+  <br />
+  <a href="https://github.com/beezlabs-org/cloudflare-tunnel-operator/issues">Report Bug</a>
+  ·
+  <a href="https://github.com/beezlabs-org/cloudflare-tunnel-operator/issues">Request Feature</a>
+</p>
 
-### Running on the cluster
-1. Install Instances of Custom Resources:
+## About this project
 
-```sh
-kubectl apply -f config/samples/
-```
+[Cloudflare Tunnels](https://www.cloudflare.com/en-gb/products/tunnel/) allows us to access systems behind a firewall 
+or ones without a static IP among other things. This can be incredibly useful for people running their own home servers 
+as it enables them to expose applications running on those servers to the internet without needing to port forward
+or pay for a static IP. 
 
-2. Build and push your image to the location specified by `IMG`:
-	
-```sh
-make docker-build docker-push IMG=<some-registry>/cloudflare-tunnel-operator:tag
-```
-	
-3. Deploy the controller to the cluster with the image specified by `IMG`:
+But what about those running home Kubernetes clusters? One could run the tunnel application like any other application
+on Kubernetes but creating and destroying tunnels would either involve changing the config file in the cluster or
+using the Cloudflare Tunnel dashboard. This is certainly a valid way but might not be the ideal way, especially if you
+live and breathe [GitOps](https://www.weave.works/technologies/gitops/).
 
-```sh
-make deploy IMG=<some-registry>/cloudflare-tunnel-operator:tag
-```
+That is where this project comes in. It allows you to create custom resources for Cloudflare Tunnels in your Kubernetes
+cluster. This means that the Tunnel will be active as long as your custom resource exists and will be updated if your
+custom resource is updated.
 
-### Uninstall CRDs
-To delete the CRDs from the cluster:
+### Built With
 
-```sh
-make uninstall
-```
+- [Operator SDK](https://sdk.operatorframework.io/)
+- [Kubebuilder](https://book.kubebuilder.io/)
+- [cloudflared](https://github.com/cloudflare/cloudflared/)
+- [cloudflare-go](https://github.com/cloudflare/cloudflare-go/)
 
-### Undeploy controller
-UnDeploy the controller to the cluster:
+## For Users
 
-```sh
-make undeploy
-```
+Using this operator is pretty much similar to how other operators are deployed.
+
+### Prerequisites
+
+
+
+### Installation
+
+
+
+### Usage
+
+One can optionally push to a local NPM repository using the optional Verdaccio package repository.
+
+## For Developers
+
+
+
+## Roadmap
+
+The current roadmap consists of trying to include components from existing projects into this library.
 
 ## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
 
-### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
-
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
-
-### Test It Out
-1. Install the CRDs into the cluster:
-
-```sh
-make install
-```
-
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
-
-```sh
-make run
-```
-
-**NOTE:** You can also run this in one step by running: `make install run`
-
-### Modifying the API definitions
-If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
-
-```sh
-make manifests
-```
-
-**NOTE:** Run `make --help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
+Contributions can be made with access to the repository.
 
 ## License
 
-Copyright 2022 Beez Innovation Labs.
+Copyright Beez Innovation Labs Pvt Ltd.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+## Contact
 
-    http://www.apache.org/licenses/LICENSE-2.0
+Sayak Mukhopadhyay - [SayakMukhopadhyay](https://github.com/SayakMukhopadhyay) - sayak@beezlabs.com
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
+[contributors-shield]: https://shields.beezlabs.app/github/contributors/beezlabs-org/cloudflare-tunnel-operator.svg?style=for-the-badge
+[contributors-url]: https://github.com/beezlabs-org/cloudflare-tunnel-operator
+[forks-shield]: https://shields.beezlabs.app/github/forks/beezlabs-org/cloudflare-tunnel-operator.svg?style=for-the-badge
+[forks-url]: https://github.com/beezlabs-org/cloudflare-tunnel-operator/network/members
+[stars-shield]: https://shields.beezlabs.app/github/stars/beezlabs-org/cloudflare-tunnel-operator.svg?style=for-the-badge
+[stars-url]: https://github.com/beezlabs-org/cloudflare-tunnel-operator/stargazers
+[issues-shield]: https://shields.beezlabs.app/github/issues/beezlabs-org/cloudflare-tunnel-operator.svg?style=for-the-badge
+[issues-url]: https://github.com/beezlabs-org/cloudflare-tunnel-operator/issues
+[license-shield]: https://shields.beezlabs.app/github/license/beezlabs-org/cloudflare-tunnel-operator.svg?style=for-the-badge
+[license-url]: https://github.com/beezlabs-org/cloudflare-tunnel-operator/blob/master/LICENSE
