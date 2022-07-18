@@ -1,0 +1,27 @@
+name: Bump Chart
+on:
+  workflow_dispatch:
+    inputs:
+      new-version:
+        description: The new version to bump the chart to
+        required: true
+jobs:
+  bump-chart-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Version Bump
+        uses: beezlabs-org/chart-bump-version@v1
+        with:
+          pat: ${{ secrets.REPO_PAT }}
+          new-version: ${{ github.event.inputs.new-version }}
+
+  release-chart:
+    needs:
+      - bump-chart-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release
+        uses: beezlabs-org/chart-release@v1
+        with:
+          pat: ${{ secrets.REPO_PAT }}
+          new-version: ${{ github.event.inputs.new-version }}

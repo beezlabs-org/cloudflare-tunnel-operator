@@ -17,7 +17,7 @@ jobs:
         run: |
           echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
     outputs:
-      version: ${{ env.VERSION }}
+      version: v${{ env.VERSION }}
 
   docker-build-push:
     needs:
