@@ -55,56 +55,108 @@ helm install my-cloudflare-tunnel-operator beezlabs/cloudflare-tunnel-operator -
 ```
 
 ## Usage
-1. Apply some example
+1. Figure out the service that you want to connect to. In the below example, the service looks as following
+    ```yaml
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: traefik
+      namespace: traefik
+    spec:
+      ports:
+        - name: web
+          nodePort: 30391
+          port: 80
+          protocol: TCP
+          targetPort: web
+        - name: websecure
+          nodePort: 31118
+          port: 443
+          protocol: TCP
+          targetPort: websecure
+      selector:
+        app.kubernetes.io/instance: traefik
+        app.kubernetes.io/name: traefik
+      type: LoadBalancer
+    ```
+2. Create an API token in cloudflare which has access to all Zones and the DNS.
+3. Apply the examples updating the resources where needed
 ```sh
-kubectl apply -f examples/deployment/
-kubectl apply -f examples/http/simple/
-kubectl apply -f examples/http/full-configuration/
+kubectl apply -f examples/sampleTunnel/
+kubectl apply -f examples/secret/
 ```
-2. Check ngrok object
+2. Check CloudflareTunnel object
 ```console
-kubectl get ngrok --all-namespaces
-NAMESPACE    NAME                       STATUS    URL
-default      http-simple                created   https://9496e56ed0bc.ngrok.io
-default      http-full-configuration    created   https://ngrok.zufardhiyaulhaq.com
+kubectl get cloudflaretunnel -A
+NAMESPACE    NAME            AGE
+cloudflare   sample-tunnel   3d21h
 ```
 
-3. access the URL
-```console
-https://d5150f7c3588.ngrok.io
-https://ngrok.zufardhiyaulhaq.com
+3. Access the URL that is set as domain
+```bash
+https://example.sayakm.me
 ```
 
 ## Values
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| operator.image | string | `"zufardhiyaulhaq/ngrok-operator"` |  |
-| operator.replica | int | `1` |  |
-| operator.tag | string | `"v1.3.0"` |  |
-| resources.limits.cpu | string | `"200m"` |  |
-| resources.limits.memory | string | `"100Mi"` |  |
-| resources.requests.cpu | string | `"100m"` |  |
-| resources.requests.memory | string | `"20Mi"` |  |
+| Key                       | Type   | Default                                             | Description                            |
+|---------------------------|--------|-----------------------------------------------------|----------------------------------------|
+| image.repository          | string | `"ghcr.io/beezlabs-org/cloudflare-tunnel-operator"` | The image of the operator              |
+| image.pullPolicy          | string | `"IfNotPresent`                                     | The image pull policy for the operator |
+| image.tag                 | string | `"v0.1.0"`                                          | The image tag ofe the operator         |
 
-see example files [here](https://github.com/zufardhiyaulhaq/ngrok-operator/blob/master/charts/ngrok-operator/values.yaml)
+Current values file [here](https://github.com/beezlabs-org/cloudflare-tunnel-operator/blob/main/charts/values.yaml)
 
 ```yaml
-operator:
-  # image of ngrok-operator
-  image: "zufardhiyaulhaq/ngrok-operator"
-  # tag of ngrok-operator image
-  tag: "v1.3.0"
-  # number of replica for deployment
-  replica: 1
+replicaCount: 1
 
-resources:
-  limits:
-    cpu: 200m
-    memory: 100Mi
-  requests:
-    cpu: 100m
-    memory: 20Mi
+image:
+   repository: ghcr.io/beezlabs-org/cloudflare-tunnel-operator
+   pullPolicy: IfNotPresent
+   tag: 0.1.0
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+   create: true
+   annotations: {}
+   name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+        # capabilities:
+        #   drop:
+        #   - ALL
+        # readOnlyRootFilesystem: true
+        # runAsNonRoot: true
+# runAsUser: 1000
+
+resources: {}
+        # limits:
+        #   cpu: 100m
+        #   memory: 128Mi
+        # requests:
+        #   cpu: 100m
+#   memory: 128Mi
+
+autoscaling:
+   enabled: false
+   minReplicas: 1
+   maxReplicas: 100
+   targetCPUUtilizationPercentage: 80
+   # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
 ```
 
 ## License

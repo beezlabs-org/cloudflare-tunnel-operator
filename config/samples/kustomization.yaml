@@ -2,6 +2,4 @@
 namespace: cloudflare
 resources:
 - cloudflare-tunnel-operator_v1alpha1_cloudflaretunnel.yaml
-- secret.yaml
-- namespace.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

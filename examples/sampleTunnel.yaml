@@ -1,0 +1,24 @@
+apiVersion: cloudflare-tunnel-operator.beezlabs.app/v1alpha1
+kind: CloudflareTunnel
+metadata:
+  name: sample-tunnel
+spec:
+  domain: example.sayakm.me
+  zone: sayakm.me
+  service:
+    name: traefik
+    namespace: traefik
+    protocol: https
+    port: 443
+  container:
+    image: cloudflare/cloudflared:latest
+    imagePullPolicy: Always
+    command:
+      - cloudflared
+    args:
+      - tunnel
+      - --metrics
+      - localhost:9090
+      - run
+  tokenSecretName: sample-tunnel
+  replicas: 1

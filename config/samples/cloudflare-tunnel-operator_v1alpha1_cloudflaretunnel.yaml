@@ -1,16 +1,6 @@
 apiVersion: cloudflare-tunnel-operator.beezlabs.app/v1alpha1
 kind: CloudflareTunnel
 metadata:
-  name: sample-tunnel
+  name: cloudflaretunnel-sample
 spec:
-  domain: example.sayakm.me
-  zone: sayakm.me
-  service:
-    name: traefik
-    namespace: traefik
-    protocol: https
-    port: 443
-  tokenSecretName: sample-tunnel
-  replicas: 1
-  container:
-    image: ghcr.io/sayakmukhopadhyay/cloudflared:latest
+# TODO(user): Add fields here
