@@ -3,7 +3,7 @@ module github.com/beezlabs-org/cloudflare-tunnel-operator
 go 1.17
 
 require (
-	github.com/cloudflare/cloudflare-go v0.44.1-0.20220714230854-f91b3b5b3917
+	github.com/cloudflare/cloudflare-go v0.45.0
 	github.com/go-logr/logr v1.2.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
@@ -31,7 +31,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/google/uuid v1.1.2 // indirect
@@ -54,7 +54,7 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
-	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
+	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
 	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect

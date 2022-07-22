@@ -1,5 +1,0 @@
-## Append samples you want in your CSV to this file as resources ##
-namespace: cloudflare
-resources:
-- cloudflare-tunnel-operator_v1alpha1_cloudflaretunnel.yaml
-#+kubebuilder:scaffold:manifestskustomizesamples
