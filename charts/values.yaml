@@ -12,7 +12,7 @@ image:
 
 imagePullSecrets: []
 nameOverride: ""
-fullnameOverride: ""
+fullnameOverride: cloudflare-tunnel-operator-controller-manager
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -23,12 +23,17 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+metricsReaderRole:
+  create: false
+
 podAnnotations: {}
 
-podSecurityContext: {}
+podSecurityContext:
+  runAsNonRoot: true
   # fsGroup: 2000
 
-securityContext: {}
+securityContext:
+  allowPrivilegeEscalation: false
   # capabilities:
   #   drop:
   #   - ALL
@@ -60,3 +65,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+namespace:
+  create: true
