@@ -54,7 +54,7 @@ func (d *DeploymentModel) GetDeployment() *appsv1.Deployment {
 	if len(d.Command) != 0 {
 		command = d.Command
 	}
-	args := []string{"tunnel", "--metrics", "localhost:9090", "run"}
+	args := []string{"tunnel", "--metrics", "localhost:9090", "--no-autoupdate", "run"}
 	if len(d.Args) != 0 {
 		args = d.Args
 	}
