@@ -39,7 +39,6 @@ custom resource is updated.
 
 ### Built With
 
-- [Operator SDK](https://sdk.operatorframework.io/)
 - [Kubebuilder](https://book.kubebuilder.io/)
 - [cloudflared](https://github.com/cloudflare/cloudflared/)
 - [cloudflare-go](https://github.com/cloudflare/cloudflare-go/)
