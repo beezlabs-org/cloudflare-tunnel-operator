@@ -81,21 +81,20 @@ helm install my-cloudflare-tunnel-operator beezlabs/cloudflare-tunnel-operator -
     ```
 2. Create an API token in cloudflare which has access to all Zones and the DNS.
 3. Apply the examples updating the resources where needed
-```sh
-kubectl apply -f examples/sampleTunnel/
-kubectl apply -f examples/secret/
-```
-2. Check CloudflareTunnel object
-```console
-kubectl get cloudflaretunnel -A
-NAMESPACE    NAME            AGE
-cloudflare   sample-tunnel   3d21h
-```
-
-3. Access the URL that is set as domain
-```bash
-https://example.sayakm.me
-```
+   ```sh
+   kubectl apply -f examples/sampleTunnel/
+   kubectl apply -f examples/secret/
+   ```
+4. Check CloudflareTunnel object
+   ```console
+   kubectl get cloudflaretunnel -A
+   NAMESPACE    NAME            AGE
+   cloudflare   sample-tunnel   3d21h
+   ```
+5. Access the URL that is set as domain
+   ```bash
+   https://example.sayakm.me
+   ```
 
 ## Values
 
