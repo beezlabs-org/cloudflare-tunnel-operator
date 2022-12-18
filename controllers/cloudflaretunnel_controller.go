@@ -336,8 +336,9 @@ func (r *CloudflareTunnelReconciler) createSecret(ctx context.Context, cloudflar
 				r.logger.Error(err, "could not create secret in cluster")
 				return nil, err
 			}
+		} else {
+			return nil, err
 		}
-		return nil, err
 	} else {
 		// secret exists, so update it to ensure it is consistent
 		if err := r.Client.Update(ctx, secretCreate); err != nil {
@@ -378,8 +379,9 @@ func (r *CloudflareTunnelReconciler) createConfigMap(ctx context.Context, cloudf
 				r.logger.Error(err, "could not create ConfigMap in cluster")
 				return nil, err
 			}
+		} else {
+			return nil, err
 		}
-		return nil, err
 	} else {
 		// secret exists, so update it to ensure it is consistent
 		if err := r.Client.Update(ctx, configMapCreate); err != nil {
@@ -436,8 +438,9 @@ func (r *CloudflareTunnelReconciler) createDeployment(ctx context.Context, cloud
 				r.logger.Error(err, "could not create deployment in cluster")
 				return nil, err
 			}
+		} else {
+			return nil, err
 		}
-		return nil, err
 	} else {
 		// deployment exists, so update it to ensure it is consistent
 		if err := r.Client.Update(ctx, deploymentCreate); err != nil {
