@@ -2,8 +2,8 @@ apiVersion: v2
 name: cloudflare-tunnel-operator
 description: A Helm chart for cloudflare-tunnel-operator
 type: application
-version: 0.1.1
-appVersion: 0.1.1
+version: 0.2.0
+appVersion: 0.2.0
 home: https://github.com/beezlabs-org/cloudflare-tunnel-operator
 maintainers:
   - name: Sayak Mukhopadhyay

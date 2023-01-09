@@ -184,7 +184,7 @@ Sayak Mukhopadhyay - [SayakMukhopadhyay](https://github.com/SayakMukhopadhyay) -
 [artifact-hub-url]: https://artifacthub.io/packages/helm/beezlabs/cloudflare-tunnel-operator
 [go-shield]: https://shields.beezlabs.app/static/v1?label=Go&message=v1.17&color=007ec6&style=for-the-badge
 [go-url]: https://go.dev/
-[app-version-shield]: https://shields.beezlabs.app/static/v1?label=App%20Version&message=v0.1.1&color=007ec6&style=for-the-badge
+[app-version-shield]: https://shields.beezlabs.app/static/v1?label=App%20Version&message=v0.2.0&color=007ec6&style=for-the-badge
 [app-version-url]: https://github.com/beezlabs-org/cloudflare-tunnel-operator/releases/latest
-[chart-version-shield]: https://shields.beezlabs.app/static/v1?label=Chart%20Version&message=0.1.1&color=007ec6&style=for-the-badge
+[chart-version-shield]: https://shields.beezlabs.app/static/v1?label=Chart%20Version&message=0.2.0&color=007ec6&style=for-the-badge
 [chart-version-url]: https://github.com/beezlabs-org/cloudflare-tunnel-operator/releases/latest
