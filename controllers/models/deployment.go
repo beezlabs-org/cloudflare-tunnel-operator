@@ -54,7 +54,7 @@ func (d *DeploymentModel) GetDeployment() *appsv1.Deployment {
 	if len(d.Command) != 0 {
 		command = d.Command
 	}
-	args := []string{"tunnel", "--metrics", "localhost:9090", "--no-autoupdate", "run"}
+	args := []string{"tunnel", "--metrics", "localhost:9090", "--no-autoupdate", "--config", "/config/config.yaml", "run"}
 	if len(d.Args) != 0 {
 		args = d.Args
 	}
@@ -99,12 +99,12 @@ func (d *DeploymentModel) GetDeployment() *appsv1.Deployment {
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "cloudflared-config",
-									MountPath: "/root/.cloudflared/config.yaml",
+									MountPath: "/config/config.yaml",
 									SubPath:   "config.yaml",
 								},
 								{
 									Name:      "cloudflared-creds",
-									MountPath: "/root/.cloudflared/" + d.TunnelID + ".json",
+									MountPath: "/config/" + d.TunnelID + ".json",
 									SubPath:   d.TunnelID + ".json",
 								},
 							},

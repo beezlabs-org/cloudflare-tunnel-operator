@@ -19,6 +19,9 @@ spec:
       - tunnel
       - --metrics
       - localhost:9090
+      - --no-autoupdate
+      - --config
+      - /config/config.yaml
       - run
   tokenSecretName: sample-tunnel
   replicas: 1
