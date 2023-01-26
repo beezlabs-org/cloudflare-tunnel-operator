@@ -14,6 +14,7 @@ jobs:
         with:
           pat: ${{ secrets.REPO_PAT }}
           new-version: ${{ github.event.inputs.new-version }}
+          create-package: true
 
   release-chart:
     needs:
